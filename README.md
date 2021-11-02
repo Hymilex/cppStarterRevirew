@@ -9,13 +9,18 @@
 
 ## :alarm_clock: 更新日志 
 
+---
 
+**20201102:**
+ - Visual Studio 2017 插件安装
 
 
 **20201101：**
   - 添加README.md的目录架构
 
 ## :books: 目录
+
+---
 
 + Visual Studio 2017 插件安装  
 + C++ 是如何工作的  
@@ -57,11 +62,15 @@
 
 ## :coffee:一杯咖啡
 
+---
+
+
 如果您喜欢这个项目,欢迎star。如果可以,请我喝杯咖啡。
 
 <div style="align: center">
 <img src="./img/coffee.png">
 </div>
+
 ---
 
 **声明:** 知识内容均为本人梳理,未经本人同意,请勿转载。
