@@ -8,12 +8,15 @@
 </h2>
 
 
+- [Visual Studio 2017 插件安装](#visual-studio-2017-插件安装)
+  - [:one:  Visual Assistant](#one--visual-assistant)
+  - [:two: 背景美化插件](#two-背景美化插件)
+  - [:three: 自定义vssettings](#three-自定义vssettings)
+  - [:four: ImageWatch](#four-imagewatch)
 
-[toc]
 
+## :one:  Visual Assistant
 
-
-## :one: Visual Assistant
 ---
 
 
@@ -39,6 +42,7 @@ Key:
 
 
 ## :two: 背景美化插件
+
 ---
 
 >
