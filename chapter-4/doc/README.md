@@ -26,6 +26,15 @@
       - [Basic Class Template](#basic-class-template)
       - [Function Template](#function-template)
       - [Variadic template data structures](#variadic-template-data-structures)
+      - [Argument forwarding](#argument-forwarding)
+      - [Partial template speciallization](#partial-template-speciallization)
+      - [Template Specialization](#template-specialization)
+      - [Alias template](#alias-template)
+      - [Explicit instantiation](#explicit-instantiation)
+      - [Non-type template parameter](#non-type-template-parameter)
+      - [Declaring non-type template arguments with auto](#declaring-non-type-template-arguments-with-auto)
+      - [Template template parameters](#template-template-parameters)
+      - [Default template parameter value](#default-template-parameter-value)
   - [:three: cc文件调用](#three-cc文件调用)
 
 
@@ -543,6 +552,27 @@ HYPair<T1, T2> make_HYPair(T1 t1, T2 t2)
 4、https://juejin.cn/post/7025304532636663845
 5、https://www.programminghunter.com/article/7407329494/
 
+
+
+#### Argument forwarding
+
+
+#### Partial template speciallization
+
+#### Template Specialization
+
+#### Alias template
+
+
+#### Explicit instantiation
+
+#### Non-type template parameter
+
+#### Declaring non-type template arguments with auto 
+
+#### Template template parameters
+
+#### Default template parameter value
 
 
 
