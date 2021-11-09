@@ -22,8 +22,10 @@
         - [总结](#总结)
     - [实践](#实践)
   - [:two: template头文件](#two-template头文件)
-    - [理论](#理论-1)
-    - [实践](#实践-1)
+    - [理论 + 实践](#理论--实践)
+      - [Basic Class Template](#basic-class-template)
+      - [Function Template](#function-template)
+      - [Variadic template data structures](#variadic-template-data-structures)
   - [:three: cc文件调用](#three-cc文件调用)
 
 
@@ -450,9 +452,100 @@ namespace HySp
 
 ---
 
-### 理论
+**classes**、**functions**和**variables**都可以被模板化。模板是带有泛参数的一段代码,当参数被具体化时,它会变成确定的**class**、**function**或者是 **variable**。参数可以是类型、值或者它们本身。一个广为人知的模板是 **std::vector**,当参数具体化时,它就会成为一个确定的容器。
 
-### 实践
+
+
+### 理论 + 实践
+
+#### Basic Class Template
+
+最常见的是类模板是在编译期间将模板参数替代为数据类型,使代码复用。当类被声明时,用户将指定确定的数据类型。
+
+```C++
+template <typename T>
+class BankUser
+{
+private:
+    T m_Amount; 
+public: 
+    BankUser()=default;
+    BankUser(int val):m_Amount(val){};
+    ~BankUser(){}
+    T& Deposit(const T& partialAmount) const;
+};
+
+template <typename T>
+T& BankUser<T>::Deposit(const T& partialAmount)const
+{
+    m_Amount+=partialAmount;
+    return m_Amount;
+}
+```
+
+#### Function Template
+
+模板应用在函数上也具有同样的效果。
+
+```C++
+
+template <typename T>
+T& add(const T& a,const T& b)
+{
+    return a + b;
+}
+
+template <typename T>
+T& reduce(const T& a,const T& b)
+{
+    return a - b;
+}
+
+template <typename T>
+T& multi(const T& a,const T& b)
+{
+    return a * b;
+}
+
+template <typename T>
+T& remove(const T& a,const T& b)
+{
+    return a / (b + 1e-5);
+}
+
+template <typename T1, typename T2>
+struct HYPair
+{
+    T1 first;
+    T2 second;
+};
+
+template <typename T1, typename T2>
+HYPair<T1, T2> make_HYPair(T1 t1, T2 t2)
+{
+    return HYPair<T1, T2>{t1, t2};
+}
+
+
+```
+
+#### Variadic template data structures
+
+可变模板结构对于定义类或者结构体是十分有用的。
+
+
+
+
+参考:
+1、https://www.helloworld.net/p/7580029278
+2、https://mocuishle0.github.io/post/c11-xin-te-zheng-ke-bian-can-shu-mo-ban-variadic-template/
+3、typename 和 class 区别:https://liam.page/2018/03/16/keywords-typename-and-class-in-Cxx/
+4、https://juejin.cn/post/7025304532636663845
+5、https://www.programminghunter.com/article/7407329494/
+
+
+
+
 
 ## :three: cc文件调用
 
