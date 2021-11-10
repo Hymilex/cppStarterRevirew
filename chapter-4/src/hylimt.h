@@ -85,7 +85,6 @@ struct GetHelper;
 template<typename ... T>
 struct HYTuple
 {
-    HYTuple()=delete;
 };
 
 template<typename T,typename ... Rest>

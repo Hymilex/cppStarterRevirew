@@ -26,6 +26,11 @@
       - [Basic Class Template](#basic-class-template)
       - [Function Template](#function-template)
       - [Variadic template data structures](#variadic-template-data-structures)
+        - [可变模板参数定义](#可变模板参数定义)
+        - [可变模板参数函数](#可变模板参数函数)
+          - [递归函数方式展开参数包](#递归函数方式展开参数包)
+          - [逗号表达式展开参数包](#逗号表达式展开参数包)
+        - [可变模板参数类](#可变模板参数类)
       - [Argument forwarding](#argument-forwarding)
       - [Partial template speciallization](#partial-template-speciallization)
       - [Template Specialization](#template-specialization)
@@ -540,16 +545,179 @@ HYPair<T1, T2> make_HYPair(T1 t1, T2 t2)
 
 #### Variadic template data structures
 
-可变模板结构对于定义类或者结构体是十分有用的。
+C++11的新特性--可变模版参数（variadic templates）是C++11新增的最强大的特性之一，它对参数进行了高度泛化，它能表示0到任意个数、任意类型的参数。相比C++98/03，类模版和函数模版中只能含固定数量的模版参数，可变模版参数无疑是一个巨大的改进。然而由于可变模版参数比较抽象，使用起来需要一定的技巧，所以它也是C++11中最难理解和掌握的特性之一。虽然掌握可变模版参数有一定难度，但是它却是C++11中最有意思的一个特性。
 
+
+##### 可变模板参数定义
+
+可变参数模板和普通模板的语义是一样的，只是写法上稍有区别，声明可变参数模板时需要在**typename**或**class**后面带上省略号“...”。
+
+```C++
+
+template <class... T>
+void f(T... args);
+
+```
+
+上面可变模板参数的定义中,省略号的作用有两个:
+
+1、声明一个参数包 **T... args**,这个参数包可以包含0到任意个模板参数;
+
+2、在模板定义的右边,可以将参数包展开成一个一个独立的参数。
+
+上面的参数args前面有省略号，所以它就是一个可变模版参数，我们把带省略号的参数称为“参数包”，它里面包含了0到N（N>=0）个模版参数。我们无法直接获取参数包args中的每个参数的，只能通过展开参数包的方式来获取参数包中的每个参数，这是使用可变模版参数的一个主要特点，也是最大的难点，即如何展开可变模版参数。
+
+##### 可变模板参数函数
+
+```C++
+
+#include <iostream>
+template<class... T>
+void f(T... args)
+{
+    // 打印变参的个数
+    std::cout << sizeof...(args) << std::endl;
+}
+
+f();        //0
+f(1, 2);    //2
+f(1, 2.5, "");    //3
+
+```
+这个例子只是简单的将可变模版参数的个数打印出来,如果我们需要将参数包中的每个参数打印出来的话就需要通过一些方法了。
+
+展开可变模版参数函数的方法一般有两种：一种是**通过递归函数来展开参数包**，另外一种是**通过逗号表达式来展开参数包**。下面来看看如何用这两种方法来展开参数包。
+
+###### 递归函数方式展开参数包
+
+```C++
+
+#include <iostream>
+using namespace std;
+//递归终止函数
+void print()
+{
+   cout << "empty" << endl;
+}
+//展开函数
+template <class T, class ... Args>
+void print(T head, Args... rest)
+{
+   cout << "parameter " << head << endl;
+   print(rest...);
+}
+
+
+int main(void)
+{
+   print(1,2,3,4);
+   return 0;
+}
+
+```
+
+上例会输出每一个参数，直到为空时输出empty。展开参数包的函数有两个，一个是递归函数，另外一个是递归终止函数，参数包Args...在展开的过程中递归调用自己，每调用一次参数包中的参数就会少一个，直到所有的参数都展开为止，当没有参数时，则调用非模板函数print终止递归过程。
+
+上面的递归终止函数还可以写成这样，当参数包展开到最后一个参数时递归为止。
+
+
+```C++
+
+template <class T>
+void print(T t)
+{
+   cout << t << endl;
+}
+
+template<typename T>
+T sum(T t)
+{
+    return t;
+}
+template<typename T, typename ... Types>
+T sum (T first, Types ... rest)
+{
+    return first + sum<T>(rest...);
+}
+
+sum(1,2,3,4); //10
+
+```
+
+###### 逗号表达式展开参数包
+
+递归函数展开参数包是一种标准做法，也比较好理解，但也有一个缺点，就是必须要一个重载的递归终止函数，即必须要有一个同名的终止函数来终止递归，这样可能会感觉稍有不便。有没有一种更简单的方式呢？其实还有一种方法可以不通过递归方式来展开参数包，这种方式需要借助逗号表达式和初始化列表。比如前面print的例子可以改成这样：
+
+```C++
+
+template <class T>
+void printarg(T t)
+{
+   cout << t << endl;
+}
+
+template <class ...Args>
+void expand(Args... args)
+{
+   int arr[] = {(printarg(args), 0)...};
+}
+
+expand(1,2,3,4);
+
+```
+
+这个例子将分别打印出1,2,3,4四个数字。这种展开参数包的方式，不需要通过递归终止函数，是直接在expand函数体中展开的。**printarg**不是一个递归终止函数，只是一个处理参数包中每一个参数的函数。这种就地展开参数包的方式实现的关键是逗号表达式。我们知道逗号表达式会按顺序执行逗号前面的表达式，比如：
+
+```C++
+
+d = (a = b, c); 
+
+```
+
+
+这个表达式会按顺序执行：b会先赋值给a，接着括号中的逗号表达式返回c的值，因此d将等于c。
+
+**expand**函数中的逗号表达式: **(printarg(args), 0)**，也是按照这个执行顺序，先执行**printarg(args)**,再得到逗号表达式的结果0。
+
+同时还用到了C++11的另外一个特性——初始化列表，通过初始化列表来初始化一个变长数组, **{(printarg(args), 0)...}** 将会展开成<strong>((printarg(arg1),0), (printarg(arg2),0), (printarg(arg3),0), etc... )</strong>,最终会创建一个元素值都为0的数组**int arr[sizeof...(Args)]**。由于是逗号表达式，在创建数组的过程中会先执行逗号表达式前面的部分printarg(args)打印出参数，也就是说在构造int数组的过程中就将参数包展开了，这个数组的目的纯粹是为了在数组构造的过程展开参数包。
+
+##### 可变模板参数类
+
+可变参数模板类是一个带可变模板参数的模板类，比如C++11中的元祖std::tuple就是一个可变模板类，它的定义如下:
+
+```C++
+
+template< class... Types >
+class tuple;
+
+```
+
+这个可变参数模板类可以携带任意类型任意个数的模板参数:
+
+```C++
+
+std::tuple<> tp;        //可变参数模板的模板参数个数可以为0个，所以该定义也是合法的：
+std::tuple<int> tp1 = std::make_tuple(1);
+std::tuple<int, double> tp2 = std::make_tuple(1, 2.5);
+std::tuple<int, double, string> tp3 = std::make_tuple(1, 2.5, "");
+
+```
+
+可变参数模板类的参数包展开的方式和可变参数模板函数的展开方式不同，可变参数模板类的参数包展开需要**通过模板特化**和**继承**方式去展开，展开方式比可变参数模板函数要复杂。
 
 
 
 参考:
+0、https://www.cnblogs.com/qicosmos/p/4325949.html
+ 
 1、https://www.helloworld.net/p/7580029278
+
 2、https://mocuishle0.github.io/post/c11-xin-te-zheng-ke-bian-can-shu-mo-ban-variadic-template/
+
 3、typename 和 class 区别:https://liam.page/2018/03/16/keywords-typename-and-class-in-Cxx/
+
 4、https://juejin.cn/post/7025304532636663845
+
 5、https://www.programminghunter.com/article/7407329494/
 
 
@@ -562,6 +730,25 @@ HYPair<T1, T2> make_HYPair(T1 t1, T2 t2)
 #### Template Specialization
 
 #### Alias template
+
+```C++
+// 基本用法
+template<typename T> using pointer = T*;
+
+pointer<int> p = new int; // int* p = new int;
+
+// 改进
+
+template<typename T>
+struct nonconst_pointer_helper {typedef T* type;};
+
+template<typename T>
+struct nonconst_pointer_helper<T const> {typedef T* type;};
+
+template<typename T> using nonconst_pointer = nonconst_pointer_helper<T>::type;
+
+
+```
 
 
 #### Explicit instantiation
