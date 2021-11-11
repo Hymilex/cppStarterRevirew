@@ -31,6 +31,8 @@
           - [递归函数方式展开参数包](#递归函数方式展开参数包)
           - [逗号表达式展开参数包](#逗号表达式展开参数包)
         - [可变模板参数类](#可变模板参数类)
+          - [模版偏特化和递归方式来展开参数包](#模版偏特化和递归方式来展开参数包)
+          - [继承](#继承)
       - [Argument forwarding](#argument-forwarding)
       - [Partial template speciallization](#partial-template-speciallization)
       - [Template Specialization](#template-specialization)
@@ -607,6 +609,20 @@ void print(T head, Args... rest)
    print(rest...);
 }
 
+// 或者
+template <class T>
+void print(T t)
+{
+   cout <<"parameter" << t << endl;
+}
+template <class T, class ... Args>
+void print(T head, Args... rest)
+{
+   cout << "parameter " << head << endl;
+   print<T>(rest...);
+}
+
+
 
 int main(void)
 {
@@ -622,12 +638,6 @@ int main(void)
 
 
 ```C++
-
-template <class T>
-void print(T t)
-{
-   cout << t << endl;
-}
 
 template<typename T>
 T sum(T t)
@@ -679,7 +689,7 @@ d = (a = b, c);
 
 **expand**函数中的逗号表达式: **(printarg(args), 0)**，也是按照这个执行顺序，先执行**printarg(args)**,再得到逗号表达式的结果0。
 
-同时还用到了C++11的另外一个特性——初始化列表，通过初始化列表来初始化一个变长数组, **{(printarg(args), 0)...}** 将会展开成<strong>((printarg(arg1),0), (printarg(arg2),0), (printarg(arg3),0), etc... )</strong>,最终会创建一个元素值都为0的数组**int arr[sizeof...(Args)]**。由于是逗号表达式，在创建数组的过程中会先执行逗号表达式前面的部分printarg(args)打印出参数，也就是说在构造int数组的过程中就将参数包展开了，这个数组的目的纯粹是为了在数组构造的过程展开参数包。
+同时还用到了C++11的另外一个特性——初始化列表，通过初始化列表来初始化一个变长数组, **{(printarg(args), 0)...}** 将会展开成<strong>((printarg(arg1),0), (printarg(arg2),0), (printarg(arg3),0), etc... )</strong>,最终会创建一个元素值都为0的数组**int arr[sizeof...(Args)]**。由于是逗号表达式，在创建数组的过程中会先执行逗号表达式前面的部分**printarg(args)** 打印出参数，也就是说在构造int数组的过程中就将参数包展开了，这个数组的目的纯粹是为了在数组构造的过程展开参数包。
 
 ##### 可变模板参数类
 
@@ -704,6 +714,116 @@ std::tuple<int, double, string> tp3 = std::make_tuple(1, 2.5, "");
 ```
 
 可变参数模板类的参数包展开的方式和可变参数模板函数的展开方式不同，可变参数模板类的参数包展开需要**通过模板特化**和**继承**方式去展开，展开方式比可变参数模板函数要复杂。
+
+
+###### 模版偏特化和递归方式来展开参数包
+
+
+可变参数模板类的展开一般需要定义两到三个类，包括类声明和偏特化的模板类。如下方式定义了一个基本的可变参数模板类,作用是在编译期计算出参数包中参数类型的size之和:
+
+
+```C++
+
+// 前向声明
+template<typename... Args>
+struct SumSizeOf;
+
+template<typename First,typename ...Rest>
+struct SumSizeOf<First, Rest...>
+{
+	enum { value = SumSizeOf<First>::value +  SumSizeOf<Rest...>::value, };
+};
+
+// 展开到0时
+template<>struct SumSizeOf<> { enum { value = 0, }; };
+
+template<typename Last>
+struct SumSizeOf<Last>
+{
+	enum {
+		value = sizeof(Last),
+	};
+};
+// 改进 version 1
+template<typename First,typename Last>
+struct SumSizeOf<First, Last>
+{
+	enum {value = sizeof(First) + sizeof(Last),};
+};
+
+
+
+
+// 可以使用std::integral_constant来消除枚举定义value。利用std::integral_constant可以获得编译期常量的特性
+template<typename First, typename... Args>
+struct SumSizeOf;
+
+
+//基本定义
+template<typename First, typename... Rest>
+struct SumSizeOf<First, Rest...> : std::integral_constant<int, SumSizeOf<First>::value + SumSizeOf<Rest...>::value>
+{
+};
+
+//递归终止
+template<typename Last>
+struct SumSizeOf<Last> : std::integral_constant<int, sizeof(Last)>
+{
+};
+
+
+
+```
+
+
+###### 继承
+
+```C++
+
+//整型序列的定义
+template<int...>
+struct IndexSeq{};
+
+//继承方式，开始展开参数包
+template<int N, int... Indexes>
+struct MakeIndexes : MakeIndexes<N - 1, N - 1, Indexes...> {};
+
+// 模板特化，终止展开参数包的条件
+template<int... Indexes>
+struct MakeIndexes<0, Indexes...>
+{
+    typedef IndexSeq<Indexes...> type;
+};
+
+int main()
+{
+    using T = MakeIndexes<3>::type;
+    cout <<typeid(T).name() << endl;
+    return 0;
+}
+
+```
+
+其中MakeIndexes的作用是为了生成一个可变参数模板类的整数序列，最终输出的类型是：struct IndexSeq<0,1,2>。MakeIndexes继承于自身的一个特化的模板类，这个特化的模板类同时也在展开参数包，这个展开过程是通过继承发起的，直到遇到特化的终止条件展开过程才结束。
+
+
+如果不希望通过继承方式去生成整形序列，则可以通过下面的方式生成：
+
+```
+
+template<int N, int... Indexes>
+struct MakeIndexes3
+{
+    using type = typename MakeIndexes3<N - 1, N - 1, Indexes...>::type;
+};
+
+template<int... Indexes>
+struct MakeIndexes3<0, Indexes...>
+{
+    typedef IndexSeq<Indexes...> type;
+};
+
+```
 
 
 
