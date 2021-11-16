@@ -33,15 +33,8 @@
         - [可变模板参数类](#可变模板参数类)
           - [模版偏特化和递归方式来展开参数包](#模版偏特化和递归方式来展开参数包)
           - [继承](#继承)
-      - [Argument forwarding](#argument-forwarding)
-      - [Partial template speciallization](#partial-template-speciallization)
-      - [Template Specialization](#template-specialization)
       - [Alias template](#alias-template)
       - [Explicit instantiation](#explicit-instantiation)
-      - [Non-type template parameter](#non-type-template-parameter)
-      - [Declaring non-type template arguments with auto](#declaring-non-type-template-arguments-with-auto)
-      - [Template template parameters](#template-template-parameters)
-      - [Default template parameter value](#default-template-parameter-value)
   - [:three: cc文件调用](#three-cc文件调用)
 
 
@@ -634,6 +627,10 @@ int main(void)
 
 上例会输出每一个参数，直到为空时输出empty。展开参数包的函数有两个，一个是递归函数，另外一个是递归终止函数，参数包Args...在展开的过程中递归调用自己，每调用一次参数包中的参数就会少一个，直到所有的参数都展开为止，当没有参数时，则调用非模板函数print终止递归过程。
 
+<div align=center>
+<img src="../assets/chapter4-1.png">
+</div>
+
 上面的递归终止函数还可以写成这样，当参数包展开到最后一个参数时递归为止。
 
 
@@ -809,7 +806,7 @@ int main()
 
 如果不希望通过继承方式去生成整形序列，则可以通过下面的方式生成：
 
-```
+```C++
 
 template<int N, int... Indexes>
 struct MakeIndexes3
@@ -840,14 +837,7 @@ struct MakeIndexes3<0, Indexes...>
 
 5、https://www.programminghunter.com/article/7407329494/
 
-
-
-#### Argument forwarding
-
-
-#### Partial template speciallization
-
-#### Template Specialization
+6、https://sg-first.gitbooks.io/cpp-template-tutorial/content/jie_te_hua_yu_pian_te_hua.html
 
 #### Alias template
 
@@ -873,16 +863,35 @@ template<typename T> using nonconst_pointer = nonconst_pointer_helper<T>::type;
 
 #### Explicit instantiation
 
-#### Non-type template parameter
+1、这里会涉及到一个问题:为什么模板仅仅在头文件中实现?
 
-#### Declaring non-type template arguments with auto 
-
-#### Template template parameters
-
-#### Default template parameter value
+答案:为了防止出现链接异常。参考:https://blog.csdn.net/imred/article/details/80261632
 
 
+```C++
 
+#ifndef _FOO_H_
+#define _FOO_H_
+template<class T> void foo(T x)
+{
+}
+#endif
+
+// foo.cpp
+template void foo(int);
+template void foo(double);
+
+// main.cpp
+extern template void foo(double);
+
+int main()
+{
+    foo(42);
+    foo(3.21);
+    return 0;
+}
+
+```
 
 ## :three: cc文件调用
 
