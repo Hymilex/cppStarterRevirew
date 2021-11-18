@@ -11,9 +11,13 @@
 
 ---
 
+
 **20211118:**
 
 - C++ 的virtual
+
+- C++ 的array、string库
+
 
 **20211117:**
 - C++ static
