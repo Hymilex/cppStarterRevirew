@@ -11,12 +11,15 @@
 
 ---
 
+**20211122:**
+
+- 完成 C++ set、vector库的介绍
 
 **20211118:**
 
 - C++ 的virtual
 
-- C++ 的array、string库
+- C++ 的array库
 
 
 **20211117:**
@@ -49,7 +52,8 @@
 + C++ 头文件高级  
 + C++ 的static  
 + C++ 的virtual  
-+ C++ 的 array 和 string  
++ C++ 的 array 系列
++ C++ 的 string    
 + C++ 的 enum  
 + C++ 的 const
 + C++ 的类成员初始化(初始化的default和delete)
