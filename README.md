@@ -15,6 +15,7 @@
 
 - 完成stack、map、forward_list、list数据结构的复习
 - 完成string的复习
+- c++ 的 enum 完成
 
 **20211122:**
 
