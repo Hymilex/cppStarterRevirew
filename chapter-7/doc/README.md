@@ -228,12 +228,14 @@ Map是STL的一个关联容器，它提供一对一（其中第一个可以称�
 ```C++
 
 #include <map>
+#include <string>
 struct Student
 {
 public:
 	std::string name;
 public:
 	Student() {}
+	~Student() {}
 	void learn()
 	{
 		std::cout << name << " is learning at present.\n";
@@ -268,6 +270,12 @@ public:
 	}
 };
 
+void printHelloWorld()
+{
+	const char* hello_world_str = "hello world!";
+	printf("[ %s ].\n", hello_world_str);
+}
+
 void mapTest()
 {
 	using TeacherStudentMap = std::map<const ::Student*, std::set<const ::Teacher*>>;
@@ -283,21 +291,28 @@ void mapTest()
 			teacherStudentMap[student].insert(teacher);
 		}
 	};
-	using LearnMap = std::map<const ::Student*, (void)()()>;
-	using TeachMap = std::map<const Teacher*, (void)()()>;
+	using LearnMap = std::map<const Student*, void(*)()>;
+	using TeachMap = std::map<const Teacher*, void(*)()>;
 	auto insertLearnTeachMap = [](LearnMap& learnMap, const Student* student)
 	{
 		if (learnMap.find(student) == learnMap.end())
 		{
 			// insert智能添加新的key value对
-			learnMap.insert(student,student->learn());
+			//learnMap[student] = printHelloWorld;  // C++11 可以使用
+			learnMap.insert({student,printHelloWorld}); // C++17起引入
 		}
 		else
 		{
 			// [] 可以覆盖key对应的value
-			learnMap[student] = student->learn();
+			learnMap[student] = printHelloWorld;
 		}
-	}
+	};
+
+	LearnMap learn_map;
+	const Student student;
+	insertLearnTeachMap(learn_map, &student);
+	learn_map[&student]();	  // 访问map节点方式1
+	learn_map.at(&student)(); // 访问map节点方式2
 }
 
 ```
@@ -311,7 +326,7 @@ void mapTest()
 
 ### 简介
 
-std::deque （ double-ended queue ，双端队列）是有下标顺序容器，它允许在其首尾两端快速插入及删除。另外，在 deque 任一端插入或删除不会非法化指向其余元素的指针或引用。
+std::deque （ double-ended queue ，**双端队列**）是有下标顺序容器，它允许在其首尾两端快速插入及删除。另外，在 deque 任一端插入或删除不会非法化指向其余元素的指针或引用。
 
 与 std::vector 相反， deque 的元素不是相接存储的：典型实现用单独分配的固定大小数组的序列，外加额外的登记，这表示下标访问必须进行二次指针解引用，与之相比 vector 的下标访问只进行一次。
 
@@ -321,15 +336,93 @@ deque 的存储按需自动扩展及收缩。扩张 deque 比扩张 std::vector 
 
 ### 常规操作
 
+#### Capacity
+
+| 方法          | 解释                                             |
+| ------------- | ------------------------------------------------ |
+| empty         | 检查是否为空, 若容器为空则为 true ，否则为 false |
+| size          | 返回容纳的元素数                                 |
+| max_size      | 返回可以容纳的最大元素数                         |
+| shrink_to_fit | 通过释放未使用的内存减少内存的使用               |
+
+#### Element access
+
+| 方法       | 解释                                                                      |
+| ---------- | ------------------------------------------------------------------------- |
+| at         | 访问指定元素,同时进行越界检查;若 !(pos < size()) 则抛出 std::out_of_range |
+| operator[] | 访问指定元素                                                              |
+| front      | 返回第一个元素                                                            |
+| end        | 返回最后一个元素                                                          |
 
 
-| 方法       | 操作                                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------------- |
-| at         | 访问指定的元素，同时进行越界检查,若 pos 不在容器范围内，则抛出 std::out_of_range 类型的异常,使用try catch捕获     |
-| operator[] | 访问指定元素,不同于 std::map::operator[] ，此运算符决不插入新元素到容器。通过此运算符访问不存在的元素是未定义行为 |
-| size       | 返回容纳的元素数                                                                                                  |
-| push_back  | 后附给定元素 value 到容器尾。1) 初始化新元素为 value 的副本。2) 移动 value 进新元素。                             |
-| push_front | 前附给定元素 value 到容器起始。            所有迭代器，包含尾后迭代器，都被非法化。没有引用被非法化。             |
+```C++
+
+#include <iostream>
+#include <deque>
+ 
+int main()
+{
+    std::deque<int> data = { 1, 2, 4, 5, 5, 6 };
+ 
+    // Set element 1
+    data.at(1) = 88;
+ 
+    // Read element 2
+    std::cout << "Element at index 2 has value " << data.at(2) << '\n';
+ 
+    std::cout << "data size = " << data.size() << '\n';
+ 
+    try {
+        // Set element 6
+        data.at(6) = 666;
+    } catch (std::out_of_range const& exc) {
+        std::cout << exc.what() << '\n';
+    }
+ 
+    // Print final values
+    std::cout << "data:";
+    for (int elem : data)
+        std::cout << " " << elem;
+    std::cout << '\n';
+}
+
+
+```
+
+
+#### Modifiers
+
+| 方法          | 解释                   |
+| ------------- | ---------------------- |
+| clear         | 清除内容               |
+| insert        | 插入元素               |
+| emplace       | 原位构造元素           |
+| erase         | 擦除元素               |
+| push_back     | 将元素添加到容器末尾   |
+| emplace_back  | 在容器末尾就地构造元素 |
+| pop_back      | 移除末元素             |
+| push_front    | 插入元素到容器起始     |
+| emplace_front | 在容器头部原位构造元素 |
+| pop_front     | 移除首元素             |
+
+
+
+```C++
+
+#include <deque>
+void dequeTest()
+{
+	struct Candidate {
+		int boxIndex;
+		float score;
+	};
+	auto cmp = [](const Candidate bsI, const Candidate bsJ) {return bsI.score < bsJ.score; };
+	// decltype是判断cmp的数据类型
+	std::priority_queue<Candidate, std::deque<Candidate>, decltype(cmp)> candidatePriorityQueue(cmp);
+}
+
+```
+
 
 
 ## :six: queue库
@@ -359,9 +452,83 @@ deque是双向队列,queue是单向的。
 
 ## :seven: forward_list库
 
+### 简介
+
+std::forward_list 是支持从容器中的**任何位置** | **快速插入** |和 | **移除元素** |的容器。
+
+不支持快速随机访问。它实现为**单链表**，且实质上与其在 C 中实现相比无任何开销。与 std::list 相比，此容器在不需要双向迭代时提供更有效地利用空间的存储。
+
+
+
+
 ## :eight:list库
 
-## :nine:stack库
 
-## :one::zero:
-## :five: string库
+### 简介
+
+std::list是一个容器，它支持从容器中的任何地方插入和删除元素的恒定时间。不支持快速随机访问。它通常被实现为一个| **双向链表** |。与std::forward_list相比，此容器提供双向迭代功能，但 | **空间效率较低** |。
+
+
+
+```C++
+#ifndef ImagePool_hpp
+#define ImagePool_hpp
+
+#include <list>
+#include <map>
+#include "core/NonCopyable.hpp"
+#include "backend/opencl/core/runtime/OpenCLWrapper.hpp"
+namespace MNN {
+namespace OpenCL {
+
+class ImagePool : public NonCopyable {
+public:
+    ImagePool(cl::Context& context) : mContext(context) {
+    }
+
+    cl::Image* alloc(int w, int h, cl_channel_type type, bool seperate = false);
+    void recycle(cl::Image* image, bool release = false);
+    void clear();
+
+    struct Node {
+        int w;
+        int h;
+        std::shared_ptr<cl::Image> image;
+    };
+
+private:
+    std::map<cl::Image*, std::shared_ptr<Node>> mAllImage;
+    std::list<std::shared_ptr<Node>> mFreeList; // 一个包含共享指针节点的List
+
+    cl::Context& mContext;
+};
+
+} // namespace OpenCL
+} // namespace MNN
+#endif /* ImagePool_hpp */
+
+
+```
+
+
+
+## :nine:stack库
+---
+
+### 简介
+
+std::stack 类是容器适配器，它给予程序员栈的功能——特别是 FILO （先进后出）数据结构。
+
+该类模板表现为底层容器的包装器——只提供特定函数集合。栈从被称作栈顶的容器尾部推弹元素。
+
+
+### 操作
+
+是数据结构中最为简单的数据结构。详细可访问:
+
+1、https://zh.cppreference.com/w/cpp/container/stack
+
+2、https://www.cplusplus.com/reference/stack/stack/
+
+
+
