@@ -11,6 +11,10 @@
 
 ---
 
+**20211129:**
+
+- C++ 的const constexpr
+
 **20211128:**
 
 - 完成stack、map、forward_list、list数据结构的复习
