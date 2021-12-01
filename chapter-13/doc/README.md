@@ -4,7 +4,9 @@
 目录
 </h2>
 
-
+- [C++ 中的implicit和explicit](#c-中的implicit和explicit)
+  - [:one: 简介](#one-简介)
+  - [:two: 作用](#two-作用)
 
 ## :one: 简介
 
